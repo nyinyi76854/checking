@@ -3,14 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Message Notifications</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging.js"></script>
+    <title>Profile Photos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .photo-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .photo-container img {
+            max-width: 150px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
-    <div id="messages"></div>
+    <h1>Profile Photos</h1>
+    <div class="photo-container" id="photo-container"></div>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
