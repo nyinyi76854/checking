@@ -3,52 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messages</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: #fff;
-            padding: 20px 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 600px;
-            width: 100%;
-        }
-        .message-item {
-            border-bottom: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-            margin-bottom: 10px;
-        }
-        h2 {
-            margin-bottom: 20px;
-        }
-    </style>
+    <title>Message Notifications</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h2>Messages</h2>
-        <div id="message-list">
-            <!-- Messages will be displayed here -->
-        </div>
-    </div>
-
-    <!-- Firebase JavaScript SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-
+    <div id="messages"></div>
     <script>
-        // Your web app's Firebase configuration
-       const firebaseConfig = {
+      const firebaseConfig = {
   apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
   authDomain: "chatflow-59776.firebaseapp.com",
   databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
@@ -59,41 +23,81 @@
   measurementId: "G-V2180PR5CR"
 };
 
+
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const messaging = firebase.messaging();
 
-        // Reference to the messages node in the database
-        const messagesRef = database.ref('messages');
+        // Request permission to send notifications
+        messaging.requestPermission()
+            .then(() => messaging.getToken())
+            .then(token => console.log('FCM Token:', token))
+            .catch(err => console.error('Error getting FCM token', err));
 
-        // Function to fetch and display messages
-        function fetchMessages() {
-            messagesRef.once('value', (snapshot) => {
-                const messages = snapshot.val();
-                if (messages) {
-                    Object.keys(messages).forEach((key) => {
-                        const message = messages[key];
-                        displayMessage(key, message);
-                    });
-                } else {
-                    // Handle case where there are no messages
-                    const messageList = document.getElementById('message-list');
-                    messageList.innerHTML = "<p>No messages found.</p>";
-                }
+        // Function to display messages
+        function displayMessages(messages) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = ''; // Clear existing messages
+            messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = `From: ${message.senderEmail}, To: ${message.receiverEmail}, Message: ${message.text}, Time: ${new Date(message.sentTime).toLocaleString()}`;
+                messagesDiv.appendChild(messageDiv);
             });
         }
 
-        // Function to display each message
-        function displayMessage(key, message) {
-            const messageList = document.getElementById('message-list');
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message-item');
-            messageElement.innerHTML = `<strong>${message.sender}: </strong>${message.text}`;
-            messageList.appendChild(messageElement);
+        // Fetch messages from the database
+        function fetchMessages() {
+            database.ref('messages').on('value', snapshot => {
+                const messages = [];
+                snapshot.forEach(childSnapshot => {
+                    messages.push(childSnapshot.val());
+                });
+                displayMessages(messages);
+            });
         }
 
-        // Call fetchMessages when the page loads
+        // Call fetchMessages on page load
         fetchMessages();
+
+        // Function to send a push notification
+        function sendPushNotification(receiverFCMToken, senderEmail, text, sentTime) {
+            const payload = {
+                notification: {
+                    title: `New message from ${senderEmail}`,
+                    body: text,
+                    click_action: 'https://your-website.com',
+                    icon: '/icon.png'
+                },
+                data: {
+                    sentTime: sentTime.toString()
+                }
+            };
+
+            fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'key=YOUR_SERVER_KEY'
+                },
+                body: JSON.stringify({
+                    to: receiverFCMToken,
+                    notification: payload.notification,
+                    data: payload.data
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Push notification sent:', data))
+            .catch(err => console.error('Error sending push notification:', err));
+        }
+
+        // Listen for new messages and send notifications
+        database.ref('messages').on('child_added', snapshot => {
+            const newMessage = snapshot.val();
+            if (!newMessage.isRead) {
+                sendPushNotification(newMessage.receiverFCMToken, newMessage.senderEmail, newMessage.text, newMessage.sentTime);
+            }
+        });
     </script>
 </body>
 </html>
