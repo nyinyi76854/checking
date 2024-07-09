@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+        .message-item {
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        h2 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Messages</h2>
+        <div id="message-list">
+            <!-- Messages will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Firebase JavaScript SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+       const firebaseConfig = {
+  apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
+  authDomain: "chatflow-59776.firebaseapp.com",
+  databaseURL: "https://chatflow-59776-default-rtdb.firebaseio.com",
+  projectId: "chatflow-59776",
+  storageBucket: "chatflow-59776.appspot.com",
+  messagingSenderId: "549003131640",
+  appId: "1:549003131640:web:3f4a7b8cef4c0d8a2b990d",
+  measurementId: "G-V2180PR5CR"
+};
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Reference to the messages node in the database
+        const messagesRef = database.ref('messages');
+
+        // Function to fetch and display messages
+        function fetchMessages() {
+            messagesRef.once('value', (snapshot) => {
+                const messages = snapshot.val();
+                if (messages) {
+                    Object.keys(messages).forEach((key) => {
+                        const message = messages[key];
+                        displayMessage(key, message);
+                    });
+                } else {
+                    // Handle case where there are no messages
+                    const messageList = document.getElementById('message-list');
+                    messageList.innerHTML = "<p>No messages found.</p>";
+                }
+            });
+        }
+
+        // Function to display each message
+        function displayMessage(key, message) {
+            const messageList = document.getElementById('message-list');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message-item');
+            messageElement.innerHTML = `<strong>${message.sender}: </strong>${message.text}`;
+            messageList.appendChild(messageElement);
+        }
+
+        // Call fetchMessages when the page loads
+        fetchMessages();
+    </script>
+</body>
+</html>
