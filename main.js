@@ -1,4 +1,3 @@
-<script>
 const firebaseConfig = {
   apiKey: "AIzaSyBcTEVvxXmv5N8dJav4xNDRy5hXZRjVeM4",
   authDomain: "chatflow-59776.firebaseapp.com",
@@ -12,76 +11,27 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const messaging = firebase.messaging();
+const storage = firebase.storage();
 
-// Request permission to send notifications
-messaging.requestPermission()
-    .then(() => messaging.getToken())
-    .then(token => console.log('FCM Token:', token))
-    .catch(err => console.error('Error getting FCM token', err));
+// Reference to the "profilesphoto" folder
+const storageRef = storage.ref().child('profilesphoto');
 
-// Function to display messages
-function displayMessages(messages) {
-    const messagesDiv = document.getElementById('messages');
-    messagesDiv.innerHTML = ''; // Clear existing messages
-    messages.forEach(message => {
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = `From: ${message.senderEmail}, To: ${message.receiverEmail}, Message: ${message.text}, Time: ${new Date(message.sentTime).toLocaleString()}`;
-        messagesDiv.appendChild(messageDiv);
+// Get all photos in the "profilesphoto" folder
+storageRef.listAll().then(result => {
+    result.items.forEach(imageRef => {
+        displayImage(imageRef);
     });
-}
-
-// Fetch messages from the database
-function fetchMessages() {
-    database.ref('messages').on('value', snapshot => {
-        const messages = [];
-        snapshot.forEach(childSnapshot => {
-            messages.push(childSnapshot.val());
-        });
-        displayMessages(messages);
-    });
-}
-
-// Call fetchMessages on page load
-fetchMessages();
-
-// Function to send a push notification
-function sendPushNotification(receiverFCMToken, senderEmail, text, sentTime) {
-    const payload = {
-        notification: {
-            title: `New message from ${senderEmail}`,
-            body: text,
-            click_action: 'https://your-website.com',
-            icon: '/icon.png'
-        },
-        data: {
-            sentTime: sentTime.toString()
-        }
-    };
-
-    fetch('https://fcm.googleapis.com/fcm/send', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'key=YOUR_SERVER_KEY'
-        },
-        body: JSON.stringify({
-            to: receiverFCMToken,
-            notification: payload.notification,
-            data: payload.data
-        })
-    })
-    .then(response => response.json())
-    .then(data => console.log('Push notification sent:', data))
-    .catch(err => console.error('Error sending push notification:', err));
-}
-
-// Listen for new messages and send notifications
-database.ref('messages').on('child_added', snapshot => {
-    const newMessage = snapshot.val();
-    if (!newMessage.isRead) {
-        sendPushNotification(newMessage.receiverFCMToken, newMessage.senderEmail, newMessage.text, newMessage.sentTime);
-    }
+}).catch(error => {
+    console.error('Error listing all photos:', error);
 });
-</script>
+
+// Display image in the container
+function displayImage(imageRef) {
+    imageRef.getDownloadURL().then(url => {
+        const img = document.createElement('img');
+        img.src = url;
+        document.getElementById('photo-container').appendChild(img);
+    }).catch(error => {
+        console.error('Error getting image URL:', error);
+    });
+}
