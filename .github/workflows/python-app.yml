@@ -3,7 +3,7 @@ name: Python Application
 on:
   push:
     branches:
-      - main  # Adjust this to the branch you want to monitor
+      - main
 
 jobs:
   send_email:
@@ -21,9 +21,12 @@ jobs:
         run: |
           pip install firebase-admin
 
+      - name: Write Firebase credentials to a file
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}" > serviceAccount.json
+
       - name: Send verification email
         env:
-          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
           SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
         run: |
