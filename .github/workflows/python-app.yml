@@ -1,13 +1,14 @@
-name: Python Application
+name: Send Email
 
 on:
   push:
     branches:
-      - main
+      - main  # Change this to your default branch if needed
 
 jobs:
-  send_email:
+  send-email:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -15,19 +16,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.8'  # Specify the Python version you want
 
       - name: Install dependencies
         run: |
-          pip install firebase-admin
+          pip install secure-smtplib
 
-      - name: Write Firebase credentials to a file
-        run: |
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}" > serviceAccount.json
-
-      - name: Send verification email
-        env:
-          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
-          SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
-        run: |
-          python sendemail.py
+      - name: Send email
+        run: python sendemail.py 
