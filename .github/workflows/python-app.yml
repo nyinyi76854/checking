@@ -3,24 +3,40 @@ name: Send Email
 on:
   push:
     branches:
-      - main  # Change this to your default branch if needed
+      - main  # Adjust the branch as needed
 
 jobs:
-  send-email:
+  send_email_job:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'  # Specify the Python version you want
+          python-version: '3.x'
 
+      - name: Create OAuth credentials file
+        run: |
+          echo '{
+            "type": "service_account",
+            "project_id": "${{ secrets.PROJECT_ID }}",
+            "private_key_id": "${{ secrets.PRIVATE_KEY_ID }}",
+            "private_key": "${{ secrets.PRIVATE_KEY }}",
+            "client_email": "${{ secrets.CLIENT_EMAIL }}",
+            "client_id": "${{ secrets.CLIENT_ID }}",
+            "auth_uri": "${{ secrets.AUTH_URI }}",
+            "token_uri": "${{ secrets.TOKEN_URI }}",
+            "auth_provider_x509_cert_url": "${{ secrets.AUTH_PROVIDER_CERT_URL }}",
+            "client_x509_cert_url": "${{ secrets.CLIENT_X509_CERT_URL }}"
+          }' > credentials.json
+      
       - name: Install dependencies
         run: |
-          pip install secure-smtplib
+          pip install --upgrade google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
 
-      - name: Send email
-        run: python sendemail.py 
+      - name: Run email script
+        run: |
+          python send_email.py
