@@ -39,4 +39,4 @@ jobs:
 
       - name: Run email script
         run: |
-          python send_email.py
+          python sendemail.py
