@@ -1,11 +1,9 @@
 import base64
-import os
+import json
 import google.auth
-import google.auth.transport.requests
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from google.oauth2.service_account import Credentials
 from email.mime.text import MIMEText
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.send']
@@ -21,18 +19,8 @@ def create_message(sender, to, subject, message_text):
 
 def send_email():
     """Sends an email using the Gmail API."""
-    creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(google.auth.transport.requests.Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+    # Load service account credentials
+    creds = Credentials.from_service_account_file('credentials.json', scopes=SCOPES) 
 
     try:
         # Call the Gmail API
