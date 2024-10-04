@@ -1,49 +1,34 @@
+import smtplib
 import os
-import base64
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-def send_email():
-    # Path to the service account key file
-    SERVICE_ACCOUNT_FILE = 'credentials.json'
-    
-    # Scopes for Gmail API
-    SCOPES = ['https://www.googleapis.com/auth/gmail.send']
-
-    # Authenticate using the service account
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
-    )
-
-    # Create the Gmail API client
-    service = build('gmail', 'v1', credentials=credentials)
-
-    # Email details
-    sender_email = 'firebase-adminsdk-dhfm2@chatflow-59776.iam.gserviceaccount.com'  # Use the client email
-    receiver_email = 'biologyq1122@gmail.com'
-    subject = "Hi! Biology!"
-    body = "Hi! Biology!"
-
-    # Create the email message
+def send_test_email(sender_email, receiver_email, smtp_server, smtp_port, login, password):
     message = MIMEMultipart()
-    message['From'] = sender_email
-    message['To'] = receiver_email
-    message['Subject'] = subject
-    message.attach(MIMEText(body, 'plain'))
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = "Test Email from Python Script"
 
-    # Encode the message
-    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    body = "This is a test email sent from a Python script!"
+    message.attach(MIMEText(body, "plain"))
 
     try:
-        # Send the email
-        message = {'raw': raw_message}
-        service.users().messages().send(userId='me', body=message).execute()
-        print(f"Email sent to {receiver_email}!")
-    except HttpError as error:
-        print(f"An error occurred: {error}")
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(login, password)
+        server.sendmail(sender_email, receiver_email, message.as_string())
+        print("Test email sent successfully!")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+    finally:
+        server.quit()
 
 if __name__ == "__main__":
-    send_email()
+    sender_email = os.environ.get("EMAIL")
+    receiver_email = os.environ.get("RECEIVER_EMAIL")
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    login = os.environ.get("EMAIL")
+    password = os.environ.get("PASSWORD")
+
+    send_test_email(sender_email, receiver_email, smtp_server, smtp_port, login, password)
